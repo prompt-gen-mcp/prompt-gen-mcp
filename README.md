@@ -7,21 +7,21 @@ A **Model Context Protocol (MCP)** server that enhances your prompts with 47+ ad
 **Model Context Protocol (MCP)** is an open standard that allows AI assistants like Claude, Cursor, and others to connect with external tools and data sources. Think of it as a way to give your AI assistant superpowers by connecting it to specialized services.
 
 This MCP server acts as a "prompt enhancement engine" that:
-- 🧠 **Analyzes your questions** to understand what you're trying to accomplish
-- 🔍 **Scans your workspace** to find relevant code context
-- 🎯 **Selects optimal techniques** from 47+ prompt engineering methods
-- ✨ **Generates enhanced prompts** that get better AI responses
+- 🧠 **Analyzes your questions** using vector similarity search
+- 🔍 **Scans your workspace** to find relevant code context (100% private)
+- 🎯 **Selects optimal techniques** from 47+ vectorized prompt engineering methods
+- ✨ **Generates enhanced prompts** with similarity scores and examples
 
 ## Features
 
-### 🚀 **Intelligent Technique Selection**
-Automatically chooses from 47+ prompt engineering techniques including:
+### 🚀 **Vectorized Technique Selection**
+Uses semantic vector search to choose from 47+ prompt engineering techniques including:
 - **Chain of Thought** - Step-by-step reasoning
-- **Few-Shot Learning** - Learning from examples
+- **Few-Shot Learning** - Learning from examples  
 - **Plan and Solve** - Structured problem solving
 - **Self-Ask** - Breaking down complex questions
 - **Tree of Thought** - Exploring multiple solution paths
-- **And 42 more advanced techniques...**
+- **And 42 more advanced techniques stored in Qdrant Cloud...**
 
 ### 🔍 **Smart Code Context**
 - Scans your entire workspace for relevant files
@@ -38,13 +38,15 @@ Analyzes your questions to determine:
 
 ## Quick Setup
 
-### 1. Get API Keys (Free Tiers Available)
+### 1. Get API Keys
 ```bash
 # Required API keys:
-GROQ_API_KEY=your_groq_key_here          # Free: 6,000 requests/day
-TAVILY_API_KEY=your_tavily_key_here      # Free: 1,000 searches/month
-PROMPTGEN_API_KEY=your_promptgen_key     # Get from promptgen.dev/api
+PROMPTGEN_API_KEY=your_promptgen_key     # Get from promptgen.dev (required)
+GROQ_API_KEY=your_groq_key_here          # Free: 6,000 requests/day (optional)
+TAVILY_API_KEY=your_tavily_key_here      # Free: 1,000 searches/month (optional)
 ```
+
+**Important**: The `PROMPTGEN_API_KEY` is **required** to access the vectorized techniques hosted on Qdrant Cloud. Get your key from **promptgen.dev**.
 
 ### 2. Install MCP Server
 Add this configuration to your `~/.cursor/mcp_servers.json`:
@@ -80,32 +82,41 @@ Use the **Command Palette** (Cmd/Ctrl+Shift+P) and search for "MCP" to access th
 
 ### Output: Enhanced Prompt
 ```
-# Code Context Analysis
-Based on your workspace scan, I found these relevant files:
-- src/components/UserProfile.tsx (lines 45-89)
-- src/hooks/useUserData.ts (lines 12-34)
+# Enhanced Prompt with Vectorized Techniques
 
-# Selected Prompt Engineering Techniques
+## Original Request
+How do I optimize this React component?
 
-## Chain of Thought
-Let's approach this optimization systematically:
-1. First, analyze current performance bottlenecks
-2. Then, identify optimization opportunities
-3. Finally, implement improvements step by step
+## Selected Techniques (from Qdrant Cloud)
 
-## Plan and Solve
-**Plan**: Break down the optimization into measurable steps
-**Solve**: Apply specific React optimization patterns
+### 1. Plan and Solve (Similarity: 0.847)
+**Description**: Break down complex problems into structured planning and systematic solving phases
 
-# Enhanced Question
-Given the React component in src/components/UserProfile.tsx that handles user data fetching and rendering, how can I optimize its performance considering:
+**Example**: Plan: Identify optimization targets. Solve: Apply specific React patterns.
 
-1. **Rendering efficiency**: Are there unnecessary re-renders?
-2. **Data fetching**: Can we improve the useUserData hook?
-3. **Memory usage**: Are there potential memory leaks?
-4. **Bundle size**: Can we reduce the component's footprint?
+### 2. Performance Analysis (Similarity: 0.823)
+**Description**: Systematic approach to identifying and resolving performance bottlenecks
 
-Please provide specific code improvements with before/after examples.
+**Example**: Measure → Analyze → Optimize → Verify performance improvements.
+
+### 3. Code Review Checklist (Similarity: 0.791)
+**Description**: Structured approach to reviewing code for common optimization opportunities
+
+**Example**: Check rendering, memory usage, bundle size, and data fetching patterns.
+
+## Local Code Context
+## UserProfile.tsx
+```tsx
+const UserProfile = ({ userId }) => {
+  const [user, setUser] = useState(null);
+  // ... component code
+};
+```
+
+## Enhanced Analysis Request
+Using the techniques above and the provided code context, please provide a comprehensive response to: "How do I optimize this React component?"
+
+Apply the selected techniques systematically and reference specific code files when relevant.
 ```
 
 ## Supported AI Assistants
@@ -126,10 +137,10 @@ Please provide specific code improvements with before/after examples.
 ## Architecture
 
 ```
-Your Question → Local Workspace Scan → Technique API → Enhanced Prompt
-     ↓              ↓ (Private)           ↓ (Public)        ↓
-  "Optimize     Finds relevant      Selects optimal    Returns enhanced
-   React app"   code files         techniques         prompt with context
+Your Question → Local Workspace Scan → Qdrant Cloud → Enhanced Prompt
+     ↓              ↓ (Private)           ↓ (Vector Search)   ↓
+  "Optimize     Finds relevant      Semantic similarity   Returns enhanced
+   React app"   code files         technique selection   prompt with scores
 ```
 
 ## Troubleshooting
@@ -152,9 +163,9 @@ echo $PROMPTGEN_API_KEY
 4. Look for MCP status in Cursor's status bar
 
 ### Getting API Errors?
-- **GROQ**: Verify API key at console.groq.com
-- **Tavily**: Check quota at tavily.com/dashboard  
-- **PromptGen**: Confirm key at promptgen.dev/api
+- **PromptGen**: Confirm key at promptgen.dev - this is required for technique access
+- **GROQ**: Verify API key at console.groq.com (optional - for LLM responses)
+- **Tavily**: Check quota at tavily.com/dashboard (optional - for web search)
 
 ## Examples
 

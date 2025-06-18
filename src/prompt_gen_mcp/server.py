@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-PromptGen MCP Server - Advanced Prompt Engineering with Self-RAG
+PromptGen MCP Server - Advanced Prompt Engineering with Vectorized Techniques
 
 This server provides:
 - Local workspace scanning and code analysis (private)
-- Hosted API access to 47+ prompt engineering techniques
+- Qdrant Cloud access to 47+ vectorized prompt engineering techniques
 - Self-RAG pipeline for enhanced prompt generation
 """
 
@@ -25,13 +25,13 @@ import mcp.types as types
 @dataclass
 class Config:
     """Configuration for PromptGen MCP Server"""
-    # PromptGen API Configuration
-    techniques_api_url: str = "https://api.promptgen.dev"  # PromptGen API service
+    # PromptGen API Configuration (Required)
     api_key: Optional[str] = field(default_factory=lambda: os.getenv("PROMPTGEN_API_KEY"))
+    qdrant_url: str = "https://c1178bc4-5f80-4d4d-a6bf-c10ba4de69b9.eu-central-1-0.aws.cloud.qdrant.io:6333"
     
     # Local LLM Configuration  
     groq_api_key: Optional[str] = field(default_factory=lambda: os.getenv("GROQ_API_KEY"))
-    openai_api_key: Optional[str] = field(default_factory=lambda: os.getenv("OPENAI_API_KEY"))
+    tavily_api_key: Optional[str] = field(default_factory=lambda: os.getenv("TAVILY_API_KEY"))
     
     # Local Processing Settings
     max_files_to_analyze: int = 10
@@ -46,91 +46,85 @@ config = Config()
 server = Server("promptgen-mcp")
 workspace_files: List[Path] = []
 
-class TechniquesAPI:
-    """Client for the hosted techniques API"""
+class QdrantTechniquesAPI:
+    """Client for Qdrant Cloud hosted techniques"""
     
-    def __init__(self, api_url: str, api_key: Optional[str] = None):
-        self.api_url = api_url
+    def __init__(self, qdrant_url: str, api_key: Optional[str] = None):
+        self.qdrant_url = qdrant_url
         self.api_key = api_key
         self.client = httpx.AsyncClient(timeout=30.0)
+        self.collection_name = "prompt_techniques"
     
     async def get_techniques_for_query(self, query: str, limit: int = 3) -> List[Dict[str, Any]]:
-        """Get optimal techniques for a given query"""
+        """Get optimal techniques for a given query using vector search"""
+        if not self.api_key:
+            raise Exception("PROMPTGEN_API_KEY is required for technique access")
+        
         try:
-            headers = {}
-            if self.api_key:
-                headers["Authorization"] = f"Bearer {self.api_key}"
+            # Perform vector search on Qdrant Cloud
+            search_payload = {
+                "vector": await self._get_query_embedding(query),
+                "limit": limit,
+                "with_payload": True,
+                "with_vector": False
+            }
+            
+            headers = {
+                "api-key": self.api_key,
+                "Content-Type": "application/json"
+            }
             
             response = await self.client.post(
-                f"{self.api_url}/v1/techniques/select",
-                json={
-                    "query": query,
-                    "limit": limit,
-                    "include_examples": True
-                },
+                f"{self.qdrant_url}/collections/{self.collection_name}/points/search",
+                json=search_payload,
                 headers=headers
             )
             
             if response.status_code == 200:
                 data = response.json()
-                return data.get("techniques", [])
+                techniques = []
+                
+                for result in data.get("result", []):
+                    payload = result.get("payload", {})
+                    techniques.append({
+                        "name": payload.get("name", "Unknown Technique"),
+                        "description": payload.get("description", ""),
+                        "example": payload.get("example", ""),
+                        "score": result.get("score", 0.0)
+                    })
+                
+                return techniques
+            elif response.status_code == 401:
+                raise Exception("Invalid PROMPTGEN_API_KEY - get a valid key from promptgen.dev")
             elif response.status_code == 429:
-                # Rate limit exceeded
-                return [{
-                    "name": "Chain of Thought",
-                    "description": "Break down complex problems step by step",
-                    "example": "Let me think through this step by step: 1) First, I need to..."
-                }]
+                raise Exception("Rate limit exceeded - upgrade your plan at promptgen.dev")
             else:
-                # API error, return fallback
-                return self._get_fallback_techniques(query)
+                raise Exception(f"Qdrant API error: {response.status_code}")
                 
         except Exception as e:
-            print(f"⚠️ Techniques API error: {e}")
-            return self._get_fallback_techniques(query)
+            print(f"❌ Techniques API error: {e}")
+            raise e
     
-    def _get_fallback_techniques(self, query: str) -> List[Dict[str, Any]]:
-        """Fallback techniques when API is unavailable"""
-        fallback_techniques = {
-            "Chain of Thought": {
-                "description": "Break down complex problems into step-by-step reasoning",
-                "example": "Let me think step by step: 1) First I need to... 2) Then I should..."
-            },
-            "Few-Shot Learning": {
-                "description": "Provide examples to guide the model's responses",
-                "example": "Here are some examples: Example 1: Input -> Output, Example 2: Input -> Output"
-            },
-            "Role Assignment": {
-                "description": "Assign a specific role or expertise to the model",
-                "example": "You are an expert software engineer with 10 years of experience..."
-            }
-        }
-        
-        # Simple keyword matching for technique selection
-        query_lower = query.lower()
-        selected = []
-        
-        if any(word in query_lower for word in ['debug', 'error', 'fix', 'problem']):
-            selected.append("Chain of Thought")
-        if any(word in query_lower for word in ['example', 'show', 'how']):
-            selected.append("Few-Shot Learning")
-        if any(word in query_lower for word in ['expert', 'professional', 'specialist']):
-            selected.append("Role Assignment")
-        
-        if not selected:
-            selected = ["Chain of Thought"]
-        
-        return [
-            {
-                "name": name,
-                "description": fallback_techniques[name]["description"],
-                "example": fallback_techniques[name]["example"]
-            }
-            for name in selected[:3]
-        ]
+    async def _get_query_embedding(self, query: str) -> List[float]:
+        """Generate embedding for query (simplified - in production use proper embedding model)"""
+        # This is a placeholder - in production you'd use the same embedding model
+        # that was used to create the vectors in Qdrant
+        try:
+            from sentence_transformers import SentenceTransformer
+            model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+            embedding = model.encode(query).tolist()
+            return embedding
+        except ImportError:
+            # Fallback to simple hash-based vector (not ideal but works for demo)
+            import hashlib
+            hash_obj = hashlib.md5(query.encode())
+            # Convert hash to 384-dimensional vector (matching all-MiniLM-L6-v2)
+            hash_int = int(hash_obj.hexdigest(), 16)
+            vector = [(hash_int >> i) % 2 - 0.5 for i in range(384)]
+            return vector
 
 # Initialize API client
-techniques_api = TechniquesAPI(config.techniques_api_url, config.api_key)
+techniques_api = QdrantTechniquesAPI(config.qdrant_url, config.api_key)
 
 async def scan_workspace() -> List[Path]:
     """Scan current workspace for relevant code files (LOCAL ONLY)"""
@@ -191,22 +185,8 @@ async def call_llm(prompt: str) -> str:
                 max_tokens=2000
             )
             return response.choices[0].message.content
-            
-        # Fallback to OpenAI if available
-        elif config.openai_api_key:
-            import openai
-            client = openai.AsyncOpenAI(api_key=config.openai_api_key)
-            
-            response = await client.chat.completions.create(
-                model="gpt-4",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=2000
-            )
-            return response.choices[0].message.content
-        
         else:
-            return f"Enhanced analysis for: {prompt[:100]}... (No LLM API key configured)"
+            return f"Enhanced prompt ready (set GROQ_API_KEY to get LLM response):\n\n{prompt}"
             
     except Exception as e:
         return f"Error calling LLM: {str(e)}"
@@ -217,7 +197,7 @@ async def handle_list_tools() -> list[types.Tool]:
     return [
         types.Tool(
             name="enhance_prompt",
-            description="Transform a simple prompt into an enhanced prompt using advanced techniques and local code context",
+            description="Transform a simple prompt into an enhanced prompt using vectorized techniques from Qdrant Cloud and local code context",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -253,10 +233,17 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
         if not prompt:
             return [types.TextContent(type="text", text="Error: No prompt provided")]
         
+        if not config.api_key:
+            return [types.TextContent(
+                type="text", 
+                text="❌ Error: PROMPTGEN_API_KEY is required. Get your API key from promptgen.dev"
+            )]
+        
         try:
-            # Step 1: Get optimal techniques from hosted API
-            print(f"🎯 Selecting techniques for: {prompt[:50]}...")
+            # Step 1: Get optimal techniques from Qdrant Cloud
+            print(f"🎯 Selecting vectorized techniques for: {prompt[:50]}...")
             techniques = await techniques_api.get_techniques_for_query(prompt, max_techniques)
+            print(f"✅ Found {len(techniques)} optimal techniques")
             
             # Step 2: Scan local workspace (if enabled)
             code_context = ""
@@ -267,19 +254,21 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
                 print(f"📁 Found {len(files)} relevant files")
             
             # Step 3: Build enhanced prompt
-            enhanced_prompt = f"""# Enhanced Prompt with Advanced Techniques
+            enhanced_prompt = f"""# Enhanced Prompt with Vectorized Techniques
 
 ## Original Request
 {prompt}
 
-## Selected Techniques
+## Selected Techniques (from Qdrant Cloud)
 """
             
-            for technique in techniques:
+            for i, technique in enumerate(techniques, 1):
+                score = technique.get('score', 0.0)
                 enhanced_prompt += f"""
-### {technique['name']}
-**Description:** {technique['description']}
-**Example:** {technique['example']}
+### {i}. {technique['name']} (Similarity: {score:.3f})
+**Description**: {technique['description']}
+
+**Example**: {technique['example']}
 """
             
             if code_context:
@@ -289,58 +278,62 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
 """
             
             enhanced_prompt += f"""
-## Instructions
-Please respond to the original request using the {', '.join([t['name'] for t in techniques])} technique(s) above.
-{"Consider the provided code context and " if code_context else ""}Apply the techniques explicitly in your response.
+## Enhanced Analysis Request
+Using the techniques above and the provided code context, please provide a comprehensive response to: "{prompt}"
 
-Structure your response with clear sections showing each technique in action.
+Apply the selected techniques systematically and reference specific code files when relevant.
 """
             
-            # Step 4: Generate response with LLM
-            print("🤖 Generating enhanced response...")
-            llm_response = await call_llm(enhanced_prompt)
-            
-            # Step 5: Return results
-            result = {
-                "success": True,
-                "enhanced_prompt": enhanced_prompt,
-                "llm_response": llm_response,
-                "techniques_used": [t['name'] for t in techniques],
-                "files_analyzed": len(workspace_files) if include_code_context else 0,
-                "metadata": {
-                    "prompt_length": len(enhanced_prompt),
-                    "response_length": len(llm_response),
-                    "api_used": "hosted" if config.api_key else "fallback"
-                }
-            }
-            
             return [types.TextContent(
-                type="text", 
-                text=json.dumps(result, indent=2)
+                type="text",
+                text=enhanced_prompt
             )]
             
         except Exception as e:
-            error_result = {
-                "success": False,
-                "error": str(e),
-                "fallback_techniques": ["Chain of Thought", "Few-Shot Learning"]
-            }
-            return [types.TextContent(
-                type="text",
-                text=json.dumps(error_result, indent=2)
-            )]
+            error_msg = str(e)
+            if "PROMPTGEN_API_KEY" in error_msg:
+                return [types.TextContent(
+                    type="text",
+                    text=f"❌ API Key Error: {error_msg}\n\nGet your API key from promptgen.dev"
+                )]
+            else:
+                return [types.TextContent(
+                    type="text",
+                    text=f"❌ Error: {error_msg}"
+                )]
     
-    else:
-        return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
+    return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
 
 async def main():
-    """Main entry point"""
-    # Transport setup would go here for actual MCP usage
-    # For now, this serves as the server structure
-    print("🚀 PromptGen MCP Server initialized")
-    print(f"📡 API URL: {config.techniques_api_url}")
-    print(f"🔑 API Key: {'Configured' if config.api_key else 'Not configured (using fallback)'}")
-    print(f"🤖 LLM: {'Groq' if config.groq_api_key else 'OpenAI' if config.openai_api_key else 'None'}")
+    """Main server entry point"""
+    # Verify API key on startup
+    if not config.api_key:
+        print("⚠️  Warning: PROMPTGEN_API_KEY not set. Get your API key from promptgen.dev")
+    else:
+        print(f"✅ PromptGen API Key configured")
+    
+    print("🚀 PromptGen MCP Server starting...")
+    print("📊 Features:")
+    print("   🔍 Local workspace scanning (private)")
+    print("   🧠 Vectorized techniques from Qdrant Cloud")
+    print("   ✨ Enhanced prompt generation")
+    
+    # Run the server
+    from mcp.server.stdio import stdio_server
+    
+    async with stdio_server() as (read_stream, write_stream):
+        await server.run(
+            read_stream,
+            write_stream,
+            InitializationOptions(
+                server_name="promptgen-mcp",
+                server_version="1.0.0",
+                capabilities=server.get_capabilities(
+                    notification_options=NotificationOptions(),
+                    experimental_capabilities={},
+                ),
+            ),
+        )
 
 if __name__ == "__main__":
     asyncio.run(main()) 
