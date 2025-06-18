@@ -1,402 +1,183 @@
-# 🚀 Prompt Gen MCP Server
+# PromptGen MCP Server
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-green.svg)](https://modelcontextprotocol.io)
+A **Model Context Protocol (MCP)** server that enhances your prompts with 47+ advanced prompt engineering techniques, automatically selecting the best techniques based on your question type and providing relevant code context from your workspace.
 
-An advanced **Model Context Protocol (MCP) server** that provides sophisticated prompt engineering capabilities using **Self-RAG** (Self-Reflective Retrieval-Augmented Generation) and **47+ advanced prompting techniques**.
+## What is MCP?
 
-## ✨ Features
+**Model Context Protocol (MCP)** is an open standard that allows AI assistants like Claude, Cursor, and others to connect with external tools and data sources. Think of it as a way to give your AI assistant superpowers by connecting it to specialized services.
 
-### 🎯 **Self-RAG Pipeline**
-- **Dynamic Technique Selection**: Automatically selects optimal prompt engineering techniques based on question complexity and type
-- **Document Relevance Grading**: LLM-powered assessment of retrieved document relevance
-- **Web Search Integration**: Tavily API integration for enhanced context when local documents are insufficient
-- **Multi-step Reasoning**: Complete Self-RAG workflow with retrieval, grading, and generation
+This MCP server acts as a "prompt enhancement engine" that:
+- 🧠 **Analyzes your questions** to understand what you're trying to accomplish
+- 🔍 **Scans your workspace** to find relevant code context
+- 🎯 **Selects optimal techniques** from 47+ prompt engineering methods
+- ✨ **Generates enhanced prompts** that get better AI responses
 
-### 🧠 **Advanced Prompt Engineering**
-- **47+ Techniques**: Access to a comprehensive collection of advanced prompting techniques
-- **Intelligent Selection**: Vector similarity-based technique selection using E5 embeddings
-- **Context-Aware Enhancement**: Automatically enhances simple prompts with relevant code context
-- **Complexity Analysis**: Sophisticated question analysis to determine optimal technique combinations
+## Features
 
-### 🔧 **Developer-Friendly**
-- **Multiple LLM Providers**: Support for GROQ, local LLMs (Ollama), OpenAI, Anthropic, and more
-- **Repository Management**: Upload and index codebases for context-aware assistance
-- **Vector Search**: Semantic search through your codebase using state-of-the-art embeddings
-- **IDE Integration**: Designed to work seamlessly with Cursor, VS Code, and other MCP-compatible IDEs
+### 🚀 **Intelligent Technique Selection**
+Automatically chooses from 47+ prompt engineering techniques including:
+- **Chain of Thought** - Step-by-step reasoning
+- **Few-Shot Learning** - Learning from examples
+- **Plan and Solve** - Structured problem solving
+- **Self-Ask** - Breaking down complex questions
+- **Tree of Thought** - Exploring multiple solution paths
+- **And 42 more advanced techniques...**
 
-### 🌐 **Production Ready**
-- **Cloud-hosted Techniques**: Proprietary prompt engineering techniques hosted securely in the cloud
-- **Scalable Architecture**: Built with FastMCP for high performance and reliability
-- **Comprehensive Logging**: Detailed operation tracking and debugging capabilities
-- **Error Resilience**: Graceful fallbacks when dependencies are unavailable
+### 🔍 **Smart Code Context**
+- Scans your entire workspace for relevant files
+- Extracts pertinent code snippets based on your question
+- Includes file paths and line numbers for precise context
+- Maintains complete privacy - all code analysis happens locally
 
-## 🚀 Quick Start
+### 🎯 **Question-Aware Enhancement**
+Analyzes your questions to determine:
+- **Question Type**: debugging, optimization, architecture, implementation, etc.
+- **Complexity Level**: simple, moderate, high
+- **Best Techniques**: automatically selects 2-4 optimal techniques
+- **Context Needs**: finds relevant code files and functions
 
-### Installation
+## Quick Setup
 
+### 1. Get API Keys (Free Tiers Available)
 ```bash
-# Install via pip
-pip install prompt-gen-mcp
-
-# Or install from source
-git clone https://github.com/promptgen-ai/prompt-gen-mcp.git
-cd prompt-gen-mcp
-pip install -e .
+# Required API keys:
+GROQ_API_KEY=your_groq_key_here          # Free: 6,000 requests/day
+TAVILY_API_KEY=your_tavily_key_here      # Free: 1,000 searches/month
+PROMPTGEN_API_KEY=your_promptgen_key     # Get from promptgen.dev/api
 ```
 
-### Environment Setup
-
-Create a `.env` file or set environment variables:
-
-```bash
-# Required for GROQ (recommended)
-export GROQ_API_KEY="your-groq-api-key"
-
-# Required for web search
-export TAVILY_API_KEY="your-tavily-api-key"
-
-# Optional: For enhanced technique selection
-export TECHNIQUES_ENDPOINT="https://api.promptgen.ai/techniques"
-
-# Optional: Other LLM providers
-export OPENAI_API_KEY="your-openai-key"
-export ANTHROPIC_API_KEY="your-anthropic-key"
-```
-
-### Running the Server
-
-```bash
-# Start the MCP server
-python -m prompt_gen_mcp.server
-
-# Or use the CLI
-prompt-gen-mcp
-```
-
-## 🔌 MCP Configuration
-
-### For Cursor
-
-Add to your Cursor settings:
+### 2. Install MCP Server
+Add this configuration to your `~/.cursor/mcp_servers.json`:
 
 ```json
 {
   "mcpServers": {
     "prompt-gen": {
       "command": "python",
-      "args": ["-m", "prompt_gen_mcp.server"],
+      "args": ["/path/to/prompt-gen-mcp/src/prompt_gen_mcp/server.py"],
       "env": {
-        "GROQ_API_KEY": "your-groq-api-key",
-        "TAVILY_API_KEY": "your-tavily-api-key"
+        "GROQ_API_KEY": "your_groq_key_here",
+        "TAVILY_API_KEY": "your_tavily_key_here", 
+        "PROMPTGEN_API_KEY": "your_promptgen_key_here"
       }
     }
   }
 }
 ```
 
-### For Claude Desktop
+### 3. Restart Cursor
+Completely restart Cursor IDE to load the MCP server.
 
-Add to your `claude_desktop_config.json`:
+### 4. Start Enhancing!
+Use the **Command Palette** (Cmd/Ctrl+Shift+P) and search for "MCP" to access the `enhance_prompt` tool.
 
-```json
-{
-  "mcpServers": {
-    "prompt-gen": {
-      "command": "python",
-      "args": ["-m", "prompt_gen_mcp.server"],
-      "env": {
-        "GROQ_API_KEY": "your-groq-api-key",
-        "TAVILY_API_KEY": "your-tavily-api-key"
-      }
-    }
-  }
-}
+## How It Works
+
+### Input: Simple Question
+```
+"How do I optimize this React component?"
 ```
 
-### Docker Deployment
+### Output: Enhanced Prompt
+```
+# Code Context Analysis
+Based on your workspace scan, I found these relevant files:
+- src/components/UserProfile.tsx (lines 45-89)
+- src/hooks/useUserData.ts (lines 12-34)
 
+# Selected Prompt Engineering Techniques
+
+## Chain of Thought
+Let's approach this optimization systematically:
+1. First, analyze current performance bottlenecks
+2. Then, identify optimization opportunities
+3. Finally, implement improvements step by step
+
+## Plan and Solve
+**Plan**: Break down the optimization into measurable steps
+**Solve**: Apply specific React optimization patterns
+
+# Enhanced Question
+Given the React component in src/components/UserProfile.tsx that handles user data fetching and rendering, how can I optimize its performance considering:
+
+1. **Rendering efficiency**: Are there unnecessary re-renders?
+2. **Data fetching**: Can we improve the useUserData hook?
+3. **Memory usage**: Are there potential memory leaks?
+4. **Bundle size**: Can we reduce the component's footprint?
+
+Please provide specific code improvements with before/after examples.
+```
+
+## Supported AI Assistants
+
+- ✅ **Cursor IDE** (Primary support)
+- ✅ **Claude Desktop** (with MCP configuration)
+- ✅ **Cline** (VS Code extension)
+- ✅ **Windsurf** (with MCP setup)
+- ✅ **Any MCP-compatible client**
+
+## Privacy & Security
+
+- 🔒 **Local Code Analysis**: All workspace scanning happens on your machine
+- 🌐 **API-Only Techniques**: Only technique selection uses external API
+- 🔐 **No Code Upload**: Your code never leaves your computer
+- 🎯 **Minimal Data**: Only question analysis sent to technique API
+
+## Architecture
+
+```
+Your Question → Local Workspace Scan → Technique API → Enhanced Prompt
+     ↓              ↓ (Private)           ↓ (Public)        ↓
+  "Optimize     Finds relevant      Selects optimal    Returns enhanced
+   React app"   code files         techniques         prompt with context
+```
+
+## Troubleshooting
+
+### Server Not Starting?
 ```bash
-# Build Docker image
-docker build -t prompt-gen-mcp .
+# Check if Python dependencies are installed
+pip install fastmcp sentence-transformers httpx
 
-# Run with environment variables
-docker run -d \
-  -e GROQ_API_KEY=your-groq-api-key \
-  -e TAVILY_API_KEY=your-tavily-api-key \
-  -p 8000:8000 \
-  prompt-gen-mcp
+# Verify API keys are set
+echo $GROQ_API_KEY
+echo $TAVILY_API_KEY  
+echo $PROMPTGEN_API_KEY
 ```
 
-## 🧪 Tested & Verified
+### Tool Not Appearing in Cursor?
+1. Verify `~/.cursor/mcp_servers.json` exists and has correct format
+2. Restart Cursor completely (not just reload window)
+3. Check Command Palette for "MCP" options
+4. Look for MCP status in Cursor's status bar
 
-All components thoroughly tested and working:
+### Getting API Errors?
+- **GROQ**: Verify API key at console.groq.com
+- **Tavily**: Check quota at tavily.com/dashboard  
+- **PromptGen**: Confirm key at promptgen.dev/api
 
-```bash
-# Run comprehensive tests
-python test_complete_system.py
-```
+## Examples
 
-**Test Results:**
-```
-🏁 Test Results: 7 passed, 0 failed
-🎉 ALL TESTS PASSED! System is ready for production.
+### Debugging Help
+**Input**: `"This function is throwing an error"`
+**Enhancement**: Adds error analysis techniques, relevant code context, and systematic debugging steps
 
-📋 Summary:
-✅ All 47+ prompt engineering techniques loaded
-✅ Self-RAG pipeline working correctly  
-✅ Intelligent technique selection functioning
-✅ Main enhance_prompt tool operational
-✅ Code context integration working (101 files indexed)
-✅ All components initialized properly
-```
+### Architecture Questions  
+**Input**: `"How should I structure this feature?"`
+**Enhancement**: Applies architectural thinking patterns, includes existing codebase patterns, and provides structured design approaches
 
-## 🎯 Main Tool: enhance_prompt
+### Performance Optimization
+**Input**: `"Make this faster"`
+**Enhancement**: Uses performance analysis techniques, identifies bottlenecks in your code, and suggests specific optimizations
 
-The server provides **one primary tool** that does everything automatically:
+## License
 
-### `enhance_prompt(simple_prompt, workspace_path?)`
+MIT License - see [LICENSE](LICENSE) file for details.
 
-**What it does automatically:**
-1. 📖 Loads all 47+ prompt engineering techniques from llms.txt
-2. 🔍 Scans your workspace for relevant code context (auto-detects file types)
-3. 🧠 Analyzes your question to determine optimal techniques
-4. 🔍 Performs Self-RAG pipeline (retrieval + grading + technique selection)
-5. ✨ Generates enhanced prompt with techniques and code context
+## Contributing
 
-**Example Usage:**
-```python
-# Simple input
-simple_prompt = "How do I optimize this React component?"
-
-# Enhanced output automatically includes:
-# - Selected techniques: Plan and Solve, Chain of Verification (CoV)
-# - Relevant code context from your workspace  
-# - Structured approach with step-by-step instructions
-# - Verification questions and best practices
-# - Processing time: 82.3s, 8 code snippets, 2887 chars
-```
-
-## 🛠️ Available Tools
-
-### Main Tool (Primary)
-- **`enhance_prompt`**: 🚀 **Main tool** - Transform simple prompts into enhanced versions with full Self-RAG pipeline
-
-### Support Tools (Optional)
-- **`get_server_status`**: View server health and component status
-- **`list_available_techniques`**: Browse all 47+ available prompting techniques
-
-## 📊 How It Works
-
-### Self-RAG Pipeline
-
-```mermaid
-graph TD
-    A[Question Input] --> B[Question Analysis]
-    B --> C[Technique Selection]
-    C --> D[Document Retrieval]
-    D --> E[Relevance Grading]
-    E --> F{Sufficient Context?}
-    F -->|No| G[Web Search]
-    F -->|Yes| H[Enhanced Prompt Generation]
-    G --> H
-    H --> I[LLM Generation]
-    I --> J[Final Answer]
-```
-
-### Technique Selection Process
-
-1. **Question Analysis**: Categorizes questions by type (debugging, architecture, optimization, etc.)
-2. **Complexity Assessment**: Scores question complexity using multiple indicators
-3. **Vector Search**: Uses E5 embeddings to find most relevant techniques
-4. **Intelligent Combination**: Combines multiple techniques based on question characteristics
-5. **Context Integration**: Incorporates relevant code context from uploaded repositories
-
-## 🔬 Advanced Usage
-
-### Custom Technique Endpoint
-
-You can host your own techniques endpoint for proprietary prompting strategies:
-
-```python
-# Set custom endpoint
-export TECHNIQUES_ENDPOINT="https://your-domain.com/api/techniques"
-```
-
-Expected API format:
-```json
-{
-  "technique_name": {
-    "name": "Human-readable name",
-    "description": "Technique description",
-    "example": "Example usage",
-    "complexity": "low|medium|high",
-    "categories": ["debugging", "optimization"]
-  }
-}
-```
-
-### Local LLM Setup
-
-For local LLM usage (e.g., with Ollama):
-
-```bash
-# Install Ollama
-curl -fsSL https://ollama.ai/install.sh | sh
-
-# Pull a model
-ollama pull llama3.2
-
-# Configure the server to use local LLM
-# The server will auto-detect Ollama at http://localhost:11434
-```
-
-### Batch Processing
-
-```python
-# Example: Process multiple repositories
-repositories = [
-    {"path": "repo1.zip", "name": "Frontend"},
-    {"path": "repo2.zip", "name": "Backend"},
-    {"path": "repo3.zip", "name": "ML Models"}
-]
-
-for repo in repositories:
-    result = await upload_repository(
-        zip_file_path=repo["path"],
-        repo_name=repo["name"],
-        description=f"Codebase for {repo['name']}"
-    )
-    print(f"Uploaded {repo['name']}: {result['repository_id']}")
-```
-
-## 🧪 Examples
-
-### Basic Query Enhancement
-
-```python
-# Simple prompt
-simple_prompt = "How do I optimize this React component?"
-
-# Enhanced with Self-RAG
-result = await query_with_rag(
-    query=simple_prompt,
-    repo_id="your-frontend-repo-id"
-)
-
-print(f"Enhanced Answer: {result['answer']}")
-print(f"Techniques Used: {result['technique_selection']['selected_techniques']}")
-print(f"Sources: {result['documents_used']} documents")
-```
-
-### Advanced Debugging
-
-```python
-# Debugging query with specific repository context
-result = await query_with_rag(
-    query="Why is my authentication middleware failing in production?",
-    repo_id="backend-repo-id"
-)
-
-# The system automatically:
-# 1. Analyzes this as a debugging question
-# 2. Selects systematic debugging techniques
-# 3. Retrieves relevant middleware code
-# 4. Grades document relevance
-# 5. Performs web search if needed
-# 6. Generates comprehensive debugging guidance
-```
-
-### Architecture Planning
-
-```python
-# Architecture questions get specialized treatment
-result = await query_with_rag(
-    query="How should I structure a microservices architecture for this e-commerce platform?",
-    repo_id="ecommerce-repo-id"
-)
-
-# Automatically applies:
-# - Architectural reasoning techniques
-# - System design patterns
-# - Scalability considerations
-# - Code context from existing services
-```
-
-## 🔐 Security & Privacy
-
-- **Proprietary Techniques**: Advanced prompting techniques are hosted securely in the cloud
-- **Local Processing**: Code analysis and embeddings are processed locally
-- **API Key Security**: All API keys are handled securely through environment variables
-- **Data Isolation**: Each repository is isolated with unique identifiers
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Development Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/promptgen-ai/prompt-gen-mcp.git
-cd prompt-gen-mcp
-
-# Install development dependencies
-pip install -e ".[dev]"
-
-# Run tests
-pytest
-
-# Format code
-black .
-ruff check --fix .
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Documentation**: [GitHub Wiki](https://github.com/promptgen-ai/prompt-gen-mcp/wiki)
-- **Issues**: [GitHub Issues](https://github.com/promptgen-ai/prompt-gen-mcp/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/promptgen-ai/prompt-gen-mcp/discussions)
-- **Email**: support@promptgen.ai
-
-## 🎯 Roadmap
-
-- [ ] **Visual Prompt Builder**: GUI for technique selection and prompt construction
-- [ ] **Custom Technique Training**: Allow users to define and train custom techniques
-- [ ] **Multi-modal Support**: Support for image and audio in prompts
-- [ ] **Collaborative Features**: Team sharing and prompt versioning
-- [ ] **Analytics Dashboard**: Usage analytics and technique effectiveness metrics
-- [ ] **Browser Extension**: Direct integration with web development workflows
-
-## 🏆 Why Choose Prompt Gen MCP?
-
-### ✅ **Comprehensive**
-- 47+ advanced prompting techniques (vs 3-5 in most tools)
-- Full Self-RAG pipeline (vs simple RAG)
-- Multi-provider LLM support (vs single provider)
-
-### ✅ **Intelligent**
-- Automatic technique selection (vs manual selection)
-- Context-aware enhancement (vs static prompts)
-- Dynamic complexity analysis (vs one-size-fits-all)
-
-### ✅ **Production-Ready**
-- Cloud-hosted proprietary techniques (vs exposed techniques)
-- Scalable architecture (vs prototype code)
-- Comprehensive error handling (vs basic implementations)
-
-### ✅ **Developer-Focused**
-- IDE integration via MCP (vs web-only interfaces)
-- Code-aware analysis (vs generic text processing)
-- Repository management (vs file-by-file processing)
+This is a specialized MCP server for prompt enhancement. For issues or feature requests, please check the documentation or contact support through promptgen.dev.
 
 ---
 
-**Made with ❤️ by the PromptGen.ai team**
-
-*Empowering developers with AI-enhanced coding through advanced prompt engineering* 
+**Ready to supercharge your AI interactions?** Get your API keys and start generating better prompts in minutes! 🚀 
