@@ -1,0 +1,74 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "prompt-gen-mcp"
+version = "1.0.0"
+description = "Advanced Prompt Engineering MCP Server with Self-RAG and dynamic technique selection"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "PromptGen.ai", email = "support@promptgen.ai"}
+]
+keywords = ["mcp", "prompt-engineering", "rag", "self-rag", "ai", "llm"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "mcp>=1.0.0",
+    "sentence-transformers>=2.2.2",
+    "qdrant-client>=1.7.0",
+    "groq>=0.8.0", 
+    "httpx>=0.24.0",
+    "pydantic>=2.0.0",
+    "numpy>=1.21.0",
+    "typing-extensions>=4.0.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=22.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/promptgen-ai/prompt-gen-mcp"
+Repository = "https://github.com/promptgen-ai/prompt-gen-mcp"
+Documentation = "https://github.com/promptgen-ai/prompt-gen-mcp#readme"
+Issues = "https://github.com/promptgen-ai/prompt-gen-mcp/issues"
+
+[project.scripts]
+prompt-gen-mcp = "prompt_gen_mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/prompt_gen_mcp"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml"
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+
+[tool.ruff]
+line-length = 88
+target-version = "py39" 

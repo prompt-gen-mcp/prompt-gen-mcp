@@ -1,0 +1,287 @@
+{
+  "total_techniques": 47,
+  "techniques": {
+    "Emotional Language": {
+      "definition_length": 260,
+      "example_length": 243,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Role Assignment (Role Prompting)": {
+      "definition_length": 259,
+      "example_length": 289,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Style Definition": {
+      "definition_length": 233,
+      "example_length": 270,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Prompt Refinement (Automatic Prompt Optimization)": {
+      "definition_length": 244,
+      "example_length": 389,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Perspective Simulation (SimToM)": {
+      "definition_length": 228,
+      "example_length": 357,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Ambiguity Clarification (Recourse and Refinement - RAR)": {
+      "definition_length": 230,
+      "example_length": 324,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Query Repetition (Re2)": {
+      "definition_length": 218,
+      "example_length": 318,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Follow-Up Generation (Self-Ask)": {
+      "definition_length": 261,
+      "example_length": 433,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Example Generation (SG-ICL)": {
+      "definition_length": 237,
+      "example_length": 314,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Example Ordering": {
+      "definition_length": 277,
+      "example_length": 733,
+      "has_definition": true,
+      "has_example": true
+    },
+    "K-Nearest Neighbors (KNN) Example Selection": {
+      "definition_length": 271,
+      "example_length": 506,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Vote-K Selection": {
+      "definition_length": 281,
+      "example_length": 521,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Analogical Chain of Thought (Analogical CoT)": {
+      "definition_length": 246,
+      "example_length": 362,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Step-Back Prompting": {
+      "definition_length": 271,
+      "example_length": 487,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Thread of Thought (ToT)": {
+      "definition_length": 259,
+      "example_length": 610,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Tabular Chain of Thought (Tabular CoT)": {
+      "definition_length": 275,
+      "example_length": 444,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Active Prompting": {
+      "definition_length": 329,
+      "example_length": 385,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Auto-CoT": {
+      "definition_length": 325,
+      "example_length": 409,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Complexity-Based Chain of Thought": {
+      "definition_length": 280,
+      "example_length": 495,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Contrastive Chain of Thought": {
+      "definition_length": 222,
+      "example_length": 695,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Memory of Thought (MoT)": {
+      "definition_length": 288,
+      "example_length": 583,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Uncertainty-Routed Chain of Thought": {
+      "definition_length": 275,
+      "example_length": 543,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Prompt Mining": {
+      "definition_length": 267,
+      "example_length": 508,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Consistent, Diverse Sets (CoSP)": {
+      "definition_length": 276,
+      "example_length": 314,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Batched In-Context Examples (Dense)": {
+      "definition_length": 242,
+      "example_length": 283,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Step Verification (Diverse)": {
+      "definition_length": 327,
+      "example_length": 439,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Maximizing Mutual Information": {
+      "definition_length": 284,
+      "example_length": 331,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Meta-Chain of Thought (Meta-CoT)": {
+      "definition_length": 307,
+      "example_length": 467,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Specialized Experts": {
+      "definition_length": 302,
+      "example_length": 435,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Self-Consistency": {
+      "definition_length": 314,
+      "example_length": 386,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Universal Self-Consistency": {
+      "definition_length": 254,
+      "example_length": 325,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Task-Specific Selection (USP)": {
+      "definition_length": 254,
+      "example_length": 278,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Prompt Paraphrasing": {
+      "definition_length": 252,
+      "example_length": 377,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Chain of Verification (CoV)": {
+      "definition_length": 292,
+      "example_length": 526,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Self-Calibration": {
+      "definition_length": 223,
+      "example_length": 261,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Self-Refinement (Self-Refine)": {
+      "definition_length": 266,
+      "example_length": 332,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Self-Verification": {
+      "definition_length": 197,
+      "example_length": 308,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Reverse Chain of Thought (Reverse CoT)": {
+      "definition_length": 291,
+      "example_length": 394,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Cumulative Reasoning": {
+      "definition_length": 297,
+      "example_length": 462,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Functional Decomposition": {
+      "definition_length": 282,
+      "example_length": 489,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Faithful Chain of Thought (Faithful CoT)": {
+      "definition_length": 288,
+      "example_length": 552,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Least-to-Most": {
+      "definition_length": 269,
+      "example_length": 351,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Plan and Solve": {
+      "definition_length": 300,
+      "example_length": 417,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Program of Thought": {
+      "definition_length": 339,
+      "example_length": 494,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Recursive Thought (Recurs.-of-Thought)": {
+      "definition_length": 260,
+      "example_length": 301,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Skeleton of Thought": {
+      "definition_length": 260,
+      "example_length": 526,
+      "has_definition": true,
+      "has_example": true
+    },
+    "Tree of Thought (ToT)": {
+      "definition_length": 327,
+      "example_length": 593,
+      "has_definition": true,
+      "has_example": true
+    }
+  }
+}
