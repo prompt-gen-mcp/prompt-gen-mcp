@@ -1,194 +1,242 @@
-# PromptGen MCP Server
+# PromptGen MCP - Local Server
 
-A **Model Context Protocol (MCP)** server that enhances your prompts with 47+ advanced prompt engineering techniques, automatically selecting the best techniques based on your question type and providing relevant code context from your workspace.
+Transform simple questions into comprehensive, context-aware prompts using advanced prompt engineering techniques fetched from PromptGen API and your local code context.
 
-## What is MCP?
+## 🚀 Quick Start
 
-**Model Context Protocol (MCP)** is an open standard that allows AI assistants like Claude, Cursor, and others to connect with external tools and data sources. Think of it as a way to give your AI assistant superpowers by connecting it to specialized services.
+### **1. Get Your PromptGen API Key**
+1. Visit: https://promptgen-mcp.replit.app (or your deployed website URL)
+2. Sign up and generate your API key
+3. Copy your API key starting with `pg_sk_`
 
-This MCP server acts as a "prompt enhancement engine" that:
-- 🧠 **Analyzes your questions** using vector similarity search
-- 🔍 **Scans your workspace** to find relevant code context (100% private)
-- 🎯 **Selects optimal techniques** from 47+ vectorized prompt engineering methods
-- ✨ **Generates enhanced prompts** with similarity scores and examples
+### **2. Get Other Required API Keys**
+- **GROQ API Key**: Get from https://console.groq.com/
+- **Tavily API Key**: Get from https://tavily.com/
 
-## Features
-
-### 🚀 **Vectorized Technique Selection**
-Uses semantic vector search to choose from 47+ prompt engineering techniques including:
-- **Chain of Thought** - Step-by-step reasoning
-- **Few-Shot Learning** - Learning from examples  
-- **Plan and Solve** - Structured problem solving
-- **Self-Ask** - Breaking down complex questions
-- **Tree of Thought** - Exploring multiple solution paths
-- **And 42 more advanced techniques stored in Qdrant Cloud...**
-
-### 🔍 **Smart Code Context**
-- Scans your entire workspace for relevant files
-- Extracts pertinent code snippets based on your question
-- Includes file paths and line numbers for precise context
-- Maintains complete privacy - all code analysis happens locally
-
-### 🎯 **Question-Aware Enhancement**
-Analyzes your questions to determine:
-- **Question Type**: debugging, optimization, architecture, implementation, etc.
-- **Complexity Level**: simple, moderate, high
-- **Best Techniques**: automatically selects 2-4 optimal techniques
-- **Context Needs**: finds relevant code files and functions
-
-## Quick Setup
-
-### 1. Get API Keys
+### **3. Install Dependencies**
 ```bash
-# Required API keys:
-PROMPTGEN_API_KEY=your_promptgen_key     # Get from promptgen.dev (required)
-GROQ_API_KEY=your_groq_key_here          # Free: 6,000 requests/day (optional)
-TAVILY_API_KEY=your_tavily_key_here      # Free: 1,000 searches/month (optional)
+# Navigate to the directory
+cd prompt-gen-mcp
+
+# Install dependencies
+pip install mcp sentence-transformers httpx groq
 ```
 
-**Important**: The `PROMPTGEN_API_KEY` is **required** to access the vectorized techniques hosted on Qdrant Cloud. Get your key from **promptgen.dev**.
-
-### 2. Install MCP Server
-Add this configuration to your `~/.cursor/mcp_servers.json`:
+### **4. Configure Cursor**
+Copy the configuration to your Cursor MCP settings file (`~/.cursor/mcp_servers.json`):
 
 ```json
 {
   "mcpServers": {
     "prompt-gen": {
       "command": "python",
-      "args": ["/path/to/prompt-gen-mcp/src/prompt_gen_mcp/server.py"],
+      "args": ["/full/path/to/prompt-gen-mcp/src/prompt_gen_mcp/server.py"],
       "env": {
-        "GROQ_API_KEY": "your_groq_key_here",
-        "TAVILY_API_KEY": "your_tavily_key_here", 
-        "PROMPTGEN_API_KEY": "your_promptgen_key_here"
+        "PROMPTGEN_API_KEY": "pg_sk_your_key_here",
+        "GROQ_API_KEY": "gsk_your_groq_key_here", 
+        "TAVILY_API_KEY": "tvly_your_tavily_key_here"
       }
     }
   }
 }
 ```
 
-### 3. Restart Cursor
-Completely restart Cursor IDE to load the MCP server.
+**Important**: Replace `/full/path/to/prompt-gen-mcp/` with the actual full path to this directory.
 
-### 4. Start Enhancing!
-Use the **Command Palette** (Cmd/Ctrl+Shift+P) and search for "MCP" to access the `enhance_prompt` tool.
+### **5. Restart Cursor**
+Completely restart Cursor (not just reload) for the MCP server to be recognized.
 
-## How It Works
+### **6. Start Using**
+1. Open any project in Cursor
+2. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
+3. Type: "MCP: enhance_prompt"
+4. Ask: "How do I optimize this React component?"
 
-### Input: Simple Question
-```
-"How do I optimize this React component?"
-```
+## 💡 What You Get
 
-### Output: Enhanced Prompt
-```
-# Enhanced Prompt with Vectorized Techniques
+### 🔄 Transformation Example
 
-## Original Request
-How do I optimize this React component?
+| **Before** | **After** |
+|------------|----------|
+| `"How do I optimize this React component?"` | **Comprehensive Enhanced Prompt** |
 
-## Selected Techniques (from Qdrant Cloud)
+**Enhanced Output:**
+```markdown
+# 🚀 Enhanced Prompt for: How do I optimize this React component?
 
-### 1. Plan and Solve (Similarity: 0.847)
+## 🔍 Question Analysis
+- **Types**: optimization, implementation  
+- **Complexity**: medium
+- **Domain**: frontend
+- **Intent**: optimize performance
+
+## 🎯 Selected Prompt Engineering Techniques
+
+### 1. 📋 Plan and Solve (Score: 0.847)
 **Description**: Break down complex problems into structured planning and systematic solving phases
 
-**Example**: Plan: Identify optimization targets. Solve: Apply specific React patterns.
+**Application**: Plan: Identify optimization targets. Solve: Apply specific React patterns.
 
-### 2. Performance Analysis (Similarity: 0.823)
-**Description**: Systematic approach to identifying and resolving performance bottlenecks
+### 2. 📚 Few-Shot Learning (Score: 0.823)
+**Description**: Provide examples to guide the response
 
-**Example**: Measure → Analyze → Optimize → Verify performance improvements.
+**Application**: Here are optimization examples: useMemo, React.memo, useCallback...
 
-### 3. Code Review Checklist (Similarity: 0.791)
-**Description**: Structured approach to reviewing code for common optimization opportunities
+## 📁 Relevant Code Context
 
-**Example**: Check rendering, memory usage, bundle size, and data fetching patterns.
-
-## Local Code Context
-## UserProfile.tsx
-```tsx
+### File 1: `src/components/UserProfile.tsx` (Relevance: 0.892)
+```typescript
 const UserProfile = ({ userId }) => {
   const [user, setUser] = useState(null);
-  // ... component code
+  useEffect(() => {
+    fetchUser(userId).then(setUser);
+  }, [userId]);
+  return <div>{user?.name}</div>;
 };
 ```
 
-## Enhanced Analysis Request
-Using the techniques above and the provided code context, please provide a comprehensive response to: "How do I optimize this React component?"
-
-Apply the selected techniques systematically and reference specific code files when relevant.
+## ✨ Enhanced Analysis Request
+[Structured instructions for comprehensive response with context-aware suggestions...]
 ```
 
-## Supported AI Assistants
+### 📊 Feature Comparison
 
-- ✅ **Cursor IDE** (Primary support)
-- ✅ **Claude Desktop** (with MCP configuration)
-- ✅ **Cline** (VS Code extension)
-- ✅ **Windsurf** (with MCP setup)
-- ✅ **Any MCP-compatible client**
+| Feature | Basic Prompt | Enhanced Prompt |
+|---------|-------------|----------------|
+| **Context Awareness** | ❌ None | ✅ Full codebase context |
+| **Technique Selection** | ❌ Manual | ✅ AI-powered optimal selection |
+| **Privacy** | ⚠️ Varies | ✅ Code stays local |
+| **Structured Output** | ❌ Basic | ✅ Comprehensive analysis |
+| **Code Examples** | ❌ Generic | ✅ From your actual project |
+| **Relevance Scoring** | ❌ None | ✅ Semantic similarity matching |
 
-## Privacy & Security
+## 🔒 Architecture & Privacy
 
-- 🔒 **Local Code Analysis**: All workspace scanning happens on your machine
-- 🌐 **API-Only Techniques**: Only technique selection uses external API
-- 🔐 **No Code Upload**: Your code never leaves your computer
-- 🎯 **Minimal Data**: Only question analysis sent to technique API
+- **🏠 Local Processing**: All code scanning happens on your machine
+- **🌐 API Integration**: Only technique selection uses PromptGen API
+- **🔢 No Code Shared**: Your code never leaves your machine
+- **🎯 Smart Selection**: AI chooses optimal techniques from hosted database
+- **📁 Context Aware**: Automatically includes relevant code from your project
 
-## Architecture
+## ⚙️ How It Works
 
+### Architecture Overview
+
+```mermaid
+flowchart TD
+    A["🙋 User Question"] --> B["🖥️ Local MCP Server"]
+    B --> C["📁 Code Context Scanner"]
+    B --> D["🌐 PromptGen API"]
+    C --> E["🔍 Local Code Analysis"]
+    D --> F["🎯 Technique Selection"]
+    E --> G["✨ Enhanced Prompt"]
+    F --> G
+    G --> H["👤 User Receives Enhanced Prompt"]
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style G fill:#fce4ec
+    style H fill:#e0f2f1
 ```
-Your Question → Local Workspace Scan → Qdrant Cloud → Enhanced Prompt
-     ↓              ↓ (Private)           ↓ (Vector Search)   ↓
-  "Optimize     Finds relevant      Semantic similarity   Returns enhanced
-   React app"   code files         technique selection   prompt with scores
+
+### Interaction Flow
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 User
+    participant M as 🖥️ MCP Server
+    participant C as 📁 Code Scanner
+    participant P as 🌐 PromptGen API
+    participant Q as 🗄️ Qdrant DB
+    
+    U->>M: Ask question
+    M->>C: Scan local workspace
+    M->>P: Request techniques for question
+    P->>Q: Query vectorized techniques
+    Q-->>P: Return relevant techniques
+    C-->>M: Local code context
+    P-->>M: Optimal techniques
+    M->>M: Combine context + techniques
+    M->>U: Enhanced prompt with context
+    
+    Note over C,M: Code never leaves your machine
+    Note over P,Q: Only question text sent to API
 ```
 
-## Troubleshooting
+**Privacy-First Flow:**
+1. **🔒 Local MCP** scans your code privately on your machine
+2. **🌐 PromptGen API** provides optimal techniques from hosted Qdrant database
+3. **⚡ Local processing** combines everything into enhanced prompt
+4. **🛡️ No code leaves** your machine - only question text sent to get techniques
 
-### Server Not Starting?
+## 🎯 Use Cases
+
+- **Code Optimization**: Get structured analysis with relevant code context
+- **Architecture Decisions**: Receive comprehensive comparisons with examples  
+- **Debugging Help**: Get systematic debugging approaches with code snippets
+- **Learning**: Understand concepts with examples from your actual codebase
+
+## 🔧 Troubleshooting
+
+**MCP Server Not Working:**
 ```bash
-# Check if Python dependencies are installed
-pip install fastmcp sentence-transformers httpx
+# Test the server directly
+python src/prompt_gen_mcp/server.py
 
-# Verify API keys are set
-echo $GROQ_API_KEY
-echo $TAVILY_API_KEY  
-echo $PROMPTGEN_API_KEY
+# Check dependencies
+pip install mcp sentence-transformers httpx groq
 ```
 
-### Tool Not Appearing in Cursor?
-1. Verify `~/.cursor/mcp_servers.json` exists and has correct format
-2. Restart Cursor completely (not just reload window)
-3. Check Command Palette for "MCP" options
-4. Look for MCP status in Cursor's status bar
+**API Key Issues:**
+- Ensure `PROMPTGEN_API_KEY` starts with `pg_sk_`
+- Get valid GROQ key from https://console.groq.com/
+- Get valid Tavily key from https://tavily.com/
 
-### Getting API Errors?
-- **PromptGen**: Confirm key at promptgen.dev - this is required for technique access
-- **GROQ**: Verify API key at console.groq.com (optional - for LLM responses)
-- **Tavily**: Check quota at tavily.com/dashboard (optional - for web search)
+**Cursor Not Finding MCP:**
+- Ensure complete Cursor restart (not just reload)
+- Check `~/.cursor/mcp_servers.json` syntax
+- Verify file paths are absolute
+- Look for MCP status in Cursor's bottom status bar
 
-## Examples
+**No Code Context:**
+- Ensure you're in a project directory
+- Check file permissions
+- Verify supported file types (.py, .js, .ts, .tsx, .jsx, .md, .txt)
 
-### Debugging Help
-**Input**: `"This function is throwing an error"`
-**Enhancement**: Adds error analysis techniques, relevant code context, and systematic debugging steps
+## 📊 Features
 
-### Architecture Questions  
-**Input**: `"How should I structure this feature?"`
-**Enhancement**: Applies architectural thinking patterns, includes existing codebase patterns, and provides structured design approaches
+- ✅ **PromptGen API Integration** (hosted technique database)
+- ✅ **Local Code Context Scanning** (100% private)
+- ✅ **Privacy-Preserving Architecture**
+- ✅ **Intelligent Technique Selection**
+- ✅ **LLM-Powered Question Analysis**
+- ✅ **True MCP Architecture** (self-contained)
+- ✅ **Fallback Support** (works offline)
 
-### Performance Optimization
-**Input**: `"Make this faster"`
-**Enhancement**: Uses performance analysis techniques, identifies bottlenecks in your code, and suggests specific optimizations
+## 🏗️ Architecture Benefits
 
-## License
+**Proper MCP Design:**
+- ✅ Single self-contained server process
+- ✅ Cursor manages server lifecycle automatically  
+- ✅ No manual background service management
+- ✅ Clean startup/shutdown with Cursor
 
-MIT License - see [LICENSE](LICENSE) file for details.
+**API Integration:**
+- ✅ Uses PromptGen API for techniques (no local llms.txt)
+- ✅ Hosted Qdrant database with vectorized techniques
+- ✅ User authentication via API keys
+- ✅ Usage tracking and billing support
 
-## Contributing
+## 🤝 Contributing
 
-This is a specialized MCP server for prompt enhancement. For issues or feature requests, please check the documentation or contact support through promptgen.dev.
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes  
+4. Push to the branch
+5. Create a Pull Request
 
----
+## 📄 License
 
-**Ready to supercharge your AI interactions?** Get your API keys and start generating better prompts in minutes! 🚀 
+MIT License - see LICENSE file for details.

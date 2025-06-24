@@ -1,9 +1,36 @@
 # Sensitive files - NEVER COMMIT
+# Custom - Sensitive Data
 llms.txt
 *.env
 .env*
 api_keys.txt
 qdrant_config.json
+
+# Test Files and Development
+test_*.py
+*_test.py
+tests/
+debug_*.py
+*_debug.py
+temp_*.py
+
+# API Keys and Secrets
+*.key
+*.pem
+*.p12
+*.pfx
+secrets.json
+config.json
+credentials.json
+
+# Local Development
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -216,4 +243,4 @@ test-reports/
 # Packaging artifacts
 *.tar.gz
 *.zip
-releases/ 
+releases/
