@@ -5,7 +5,7 @@ Transform simple questions into comprehensive, context-aware prompts using advan
 ## 🚀 Quick Start
 
 ### **1. Get Your PromptGen API Key**
-1. Visit: https://promptgen-mcp.replit.app (or your deployed website URL)
+1. Visit: https://promptgenmcp-production.up.railway.app
 2. Sign up and generate your API key
 3. Copy your API key starting with `pg_sk_`
 
