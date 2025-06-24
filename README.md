@@ -123,16 +123,15 @@ const UserProfile = ({ userId }) => {
 ### Architecture Overview
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ff0000'}}}%%
 flowchart TD
-    A["User Question"] --> B["Local MCP Server"]
-    B --> C["Code Context Scanner"]
-    B --> D["PromptGen API"]
-    C --> E["Local Code Analysis"]
-    D --> F["Technique Selection"]
-    E --> G["Enhanced Prompt"]
+    A[User Question] --> B[Local MCP Server]
+    B --> C[Code Context Scanner]
+    B --> D[PromptGen API]
+    C --> E[Local Code Analysis]
+    D --> F[Technique Selection]
+    E --> G[Enhanced Prompt]
     F --> G
-    G --> H["User Receives Enhanced Prompt"]
+    G --> H[User Receives Enhanced Prompt]
     
     style A fill:#e1f5fe
     style B fill:#f3e5f5
@@ -145,7 +144,6 @@ flowchart TD
 ### Interaction Flow
 
 ```mermaid
-%%{init: {'theme':'base'}}%%
 sequenceDiagram
     participant U as User
     participant M as MCP Server
