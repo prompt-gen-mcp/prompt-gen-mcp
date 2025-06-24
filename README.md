@@ -97,7 +97,6 @@ const UserProfile = ({ userId }) => {
 
 ## ✨ Enhanced Analysis Request
 [Structured instructions for comprehensive response with context-aware suggestions...]
-```
 
 ### 📊 Feature Comparison
 
