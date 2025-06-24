@@ -124,14 +124,14 @@ const UserProfile = ({ userId }) => {
 
 ```mermaid
 flowchart TD
-    A["🙋 User Question"] --> B["🖥️ Local MCP Server"]
-    B --> C["📁 Code Context Scanner"]
-    B --> D["🌐 PromptGen API"]
-    C --> E["🔍 Local Code Analysis"]
-    D --> F["🎯 Technique Selection"]
-    E --> G["✨ Enhanced Prompt"]
+    A["User Question"] --> B["Local MCP Server"]
+    B --> C["Code Context Scanner"]
+    B --> D["PromptGen API"]
+    C --> E["Local Code Analysis"]
+    D --> F["Technique Selection"]
+    E --> G["Enhanced Prompt"]
     F --> G
-    G --> H["👤 User Receives Enhanced Prompt"]
+    G --> H["User Receives Enhanced Prompt"]
     
     style A fill:#e1f5fe
     style B fill:#f3e5f5
@@ -145,11 +145,11 @@ flowchart TD
 
 ```mermaid
 sequenceDiagram
-    participant U as 👤 User
-    participant M as 🖥️ MCP Server
-    participant C as 📁 Code Scanner
-    participant P as 🌐 PromptGen API
-    participant Q as 🗄️ Qdrant DB
+    participant U as User
+    participant M as MCP Server
+    participant C as Code Scanner
+    participant P as PromptGen API
+    participant Q as Qdrant DB
     
     U->>M: Ask question
     M->>C: Scan local workspace
@@ -166,10 +166,10 @@ sequenceDiagram
 ```
 
 **Privacy-First Flow:**
-1. **🔒 Local MCP** scans your code privately on your machine
-2. **🌐 PromptGen API** provides optimal techniques from hosted Qdrant database
-3. **⚡ Local processing** combines everything into enhanced prompt
-4. **🛡️ No code leaves** your machine - only question text sent to get techniques
+1. **Local MCP** scans your code privately on your machine
+2. **PromptGen API** provides optimal techniques from hosted Qdrant database
+3. **Local processing** combines everything into enhanced prompt
+4. **No code leaves** your machine - only question text sent to get techniques
 
 ## 🎯 Use Cases
 
