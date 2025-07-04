@@ -20,9 +20,47 @@ class Config:
     groq_api_key: str = os.getenv("GROQ_API_KEY", "")
     tavily_api_key: str = os.getenv("TAVILY_API_KEY", "")
     promptgen_base_url: str = "https://promptgenmcp-production.up.railway.app"  # Railway deployment URL
-    workspace_path: str = os.getcwd()
+    workspace_path: str = os.getenv("WORKSPACE_PATH", os.getcwd())
     max_file_size: int = 50000  # 50KB max per file
     embedding_model_name: str = "intfloat/multilingual-e5-large-instruct"
+    
+    def get_project_workspace(self) -> str:
+        """Intelligently detect the current project workspace"""
+        current_dir = Path(self.workspace_path)
+        
+        # Look for common project indicators in current directory and parents
+        project_indicators = {
+            'package.json', 'pyproject.toml', 'requirements.txt', 'Cargo.toml',
+            'go.mod', 'pom.xml', 'build.gradle', '.git', '.gitignore',
+            'README.md', 'setup.py', 'composer.json', 'Gemfile'
+        }
+        
+        # Start from current directory and go up to find project root
+        for path in [current_dir] + list(current_dir.parents):
+            # Count subdirectories that look like projects
+            project_subdirs = []
+            if path.is_dir():
+                for subdir in path.iterdir():
+                    if (subdir.is_dir() and 
+                        not subdir.name.startswith('.') and 
+                        not subdir.name.startswith('__') and
+                        subdir.name not in ['node_modules', 'venv', 'env', '.venv']):
+                        
+                        # Check if subdir has project indicators
+                        has_indicators = any((subdir / indicator).exists() for indicator in project_indicators)
+                        if has_indicators:
+                            project_subdirs.append(subdir.name)
+            
+            # If we found multiple project subdirectories, this is likely the workspace root
+            if len(project_subdirs) >= 2:
+                return str(path)
+            
+            # Check if current directory itself has project indicators
+            if any((path / indicator).exists() for indicator in project_indicators):
+                return str(path)
+        
+        # If no project indicators found, use current directory
+        return str(current_dir)
 
 config = Config()
 
@@ -565,10 +603,60 @@ class CodeContextScanner:
     def __init__(self):
         self.supported_extensions = {'.py', '.js', '.ts', '.tsx', '.jsx', '.md', '.txt', '.json', '.yml', '.yaml'}
     
+    def _detect_target_directory(self, question: str) -> Path:
+        """Detect if question mentions a specific project/directory to scan"""
+        project_workspace = Path(config.get_project_workspace())
+        question_lower = question.lower()
+        
+        # Check if question mentions specific subdirectories
+        potential_dirs = []
+        
+        # Look for directory names in the question (exact and partial matches)
+        for item in project_workspace.iterdir():
+            if item.is_dir() and not item.name.startswith('.') and not self._should_ignore(item):
+                dir_name_lower = item.name.lower()
+                
+                # Check for exact match or if directory name is mentioned in question
+                if (dir_name_lower in question_lower or 
+                    any(word in dir_name_lower for word in question_lower.split() if len(word) > 3)):
+                    potential_dirs.append((item, dir_name_lower in question_lower))
+                # Check for common abbreviations or variations
+                elif self._check_directory_variations(dir_name_lower, question_lower):
+                    potential_dirs.append((item, False))  # Mark as partial match
+        
+        # Sort by exact matches first, then partial matches
+        potential_dirs.sort(key=lambda x: x[1], reverse=True)
+        
+        # If specific directory mentioned, use it; otherwise use project root
+        if potential_dirs:
+            # Use the best matching directory
+            target_dir = potential_dirs[0][0]
+            match_type = "exact" if potential_dirs[0][1] else "partial"
+            print(f"🎯 Detected target directory: {target_dir.name} ({match_type} match)")
+            return target_dir
+        else:
+            print(f"🏠 Using project workspace: {project_workspace.name}")
+            return project_workspace
+    
+    def _check_directory_variations(self, dir_name: str, question: str) -> bool:
+        """Check for common directory name variations and abbreviations"""
+        variations = {
+            'cryptocasino': ['crypto', 'casino', 'gambling', 'game'],
+            'promptgenmcp': ['prompt', 'gen', 'mcp', 'generation'],
+            'python-sdk': ['python', 'sdk', 'py'],
+        }
+        
+        dir_key = dir_name.replace('-', '').replace('_', '')
+        if dir_key in variations:
+            return any(var in question for var in variations[dir_key])
+        
+        return False
+    
     async def scan_workspace(self, question: str) -> List[Dict[str, Any]]:
         """Scan workspace for relevant files and extract context"""
         try:
-            workspace_path = Path(config.workspace_path)
+            # Intelligently detect the target directory to scan
+            workspace_path = self._detect_target_directory(question)
             relevant_files = []
             
             # Find relevant files
@@ -587,8 +675,16 @@ class CodeContextScanner:
                         relevance_score = self._calculate_relevance(question, content, file_path.name)
                         
                         if relevance_score > 0.1:  # Threshold for relevance
+                            # Calculate relative path from the project root for better context
+                            project_root = Path(config.get_project_workspace())
+                            try:
+                                relative_path = str(file_path.relative_to(project_root))
+                            except ValueError:
+                                # If file is outside project root, use relative to workspace_path
+                                relative_path = str(file_path.relative_to(workspace_path))
+                            
                             relevant_files.append({
-                                'path': str(file_path.relative_to(workspace_path)),
+                                'path': relative_path,
                                 'content': content[:128000],  # Limit content length
                                 'relevance_score': relevance_score,
                                 'size': len(content),
