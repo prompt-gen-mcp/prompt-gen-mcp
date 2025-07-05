@@ -91,7 +91,7 @@ class RetrievalGrader:
     async def grade_relevance(self, question: str, document: str) -> Dict[str, Any]:
         """Grade document relevance to question"""
         if not self.client or not config.groq_api_key:
-            return {"relevant": True, "score": 0.5, "reasoning": "Fallback: assuming relevant"}
+            raise Exception("GROQ_API_KEY is required for document relevance grading. Please set your API key.")
         
         try:
             prompt = f"""You are a grader assessing relevance of a retrieved document to a user question.
@@ -142,13 +142,25 @@ Respond with JSON only:
                 if content.startswith("```json"):
                     content = content.replace("```json", "").replace("```", "").strip()
                 
-                return json.loads(content)
+                # Handle empty content
+                if not content:
+                    print("⚠️ Empty response from API, using fallback")
+                    return {"relevant": True, "score": 0.5, "reasoning": "Unable to grade relevance"}
+                
+                try:
+                    return json.loads(content)
+                except json.JSONDecodeError:
+                    print(f"⚠️ Invalid JSON response: {content[:100]}..., using fallback")
+                    return {"relevant": True, "score": 0.5, "reasoning": "Unable to parse grading response"}
             else:
-                return {"relevant": True, "score": 0.5, "reasoning": "API error fallback"}
+                error_msg = f"❌ Relevance grading API error: {response.status_code}"
+                print(f"{error_msg}, using fallback")
+                return {"relevant": True, "score": 0.5, "reasoning": f"API error {response.status_code}, assuming relevant"}
                 
         except Exception as e:
-            print(f"❌ Relevance grading failed: {e}")
-            return {"relevant": True, "score": 0.5, "reasoning": "Error fallback"}
+            error_msg = f"❌ Relevance grading failed: {e}"
+            print(f"{error_msg}, using fallback")
+            return {"relevant": True, "score": 0.5, "reasoning": "Grading failed, assuming relevant"}
 
 class HallucinationGrader:
     """Detect hallucinations in generated responses"""
@@ -161,7 +173,7 @@ class HallucinationGrader:
     async def check_grounding(self, documents: List[str], generation: str) -> Dict[str, Any]:
         """Check if generation is grounded in documents"""
         if not self.client or not config.groq_api_key:
-            return {"grounded": True, "score": 0.8, "reasoning": "Fallback: assuming grounded"}
+            raise Exception("GROQ_API_KEY is required for hallucination checking. Please set your API key.")
         
         try:
             docs_text = "\n\n".join(documents[:3])  # Limit to first 3 docs
@@ -216,13 +228,25 @@ Respond with JSON only:
                 if content.startswith("```json"):
                     content = content.replace("```json", "").replace("```", "").strip()
                 
-                return json.loads(content)
+                # Handle empty content
+                if not content:
+                    print("⚠️ Empty response from API, using fallback")
+                    return {"grounded": True, "score": 0.5, "reasoning": "Unable to check grounding", "unsupported_claims": []}
+                
+                try:
+                    return json.loads(content)
+                except json.JSONDecodeError:
+                    print(f"⚠️ Invalid JSON response: {content[:100]}..., using fallback")
+                    return {"grounded": True, "score": 0.5, "reasoning": "Unable to parse grounding response", "unsupported_claims": []}
             else:
-                return {"grounded": True, "score": 0.8, "reasoning": "API error fallback"}
+                error_msg = f"❌ Hallucination check API error: {response.status_code}"
+                print(f"{error_msg}, using fallback")
+                return {"grounded": True, "score": 0.5, "reasoning": f"API error {response.status_code}, assuming grounded", "unsupported_claims": []}
                 
         except Exception as e:
-            print(f"❌ Hallucination check failed: {e}")
-            return {"grounded": True, "score": 0.8, "reasoning": "Error fallback"}
+            error_msg = f"❌ Hallucination check failed: {e}"
+            print(f"{error_msg}, using fallback")
+            return {"grounded": True, "score": 0.5, "reasoning": "Check failed, assuming grounded", "unsupported_claims": []}
 
 class AnswerQualityGrader:
     """Grade answer quality and relevance to question"""
@@ -235,7 +259,7 @@ class AnswerQualityGrader:
     async def grade_answer(self, question: str, generation: str) -> Dict[str, Any]:
         """Grade if answer addresses the question"""
         if not self.client or not config.groq_api_key:
-            return {"addresses_question": True, "score": 0.8, "reasoning": "Fallback: assuming good"}
+            raise Exception("GROQ_API_KEY is required for answer quality grading. Please set your API key.")
         
         try:
             prompt = f"""You are a grader assessing whether an answer addresses/resolves a question.
@@ -288,13 +312,25 @@ Respond with JSON only:
                 if content.startswith("```json"):
                     content = content.replace("```json", "").replace("```", "").strip()
                 
-                return json.loads(content)
+                # Handle empty content
+                if not content:
+                    print("⚠️ Empty response from API, using fallback")
+                    return {"addresses_question": True, "score": 0.5, "reasoning": "Unable to grade answer quality", "missing_aspects": []}
+                
+                try:
+                    return json.loads(content)
+                except json.JSONDecodeError:
+                    print(f"⚠️ Invalid JSON response: {content[:100]}..., using fallback")
+                    return {"addresses_question": True, "score": 0.5, "reasoning": "Unable to parse quality response", "missing_aspects": []}
             else:
-                return {"addresses_question": True, "score": 0.8, "reasoning": "API error fallback"}
+                error_msg = f"❌ Answer quality grading API error: {response.status_code}"
+                print(f"{error_msg}, using fallback")
+                return {"addresses_question": True, "score": 0.5, "reasoning": f"API error {response.status_code}, assuming adequate", "missing_aspects": []}
                 
         except Exception as e:
-            print(f"❌ Answer quality grading failed: {e}")
-            return {"addresses_question": True, "score": 0.8, "reasoning": "Error fallback"}
+            error_msg = f"❌ Answer quality grading failed: {e}"
+            print(f"{error_msg}, using fallback")
+            return {"addresses_question": True, "score": 0.5, "reasoning": "Grading failed, assuming adequate", "missing_aspects": []}
 
 class WebSearcher:
     """Web search using Tavily API (optional)"""
@@ -317,8 +353,7 @@ class WebSearcher:
     async def search_web_docs(self, query: str, max_results: int = 3) -> List[Dict[str, Any]]:
         """Search for relevant documentation using Tavily"""
         if not self.search_tool:
-            print("⚠️ Web search not available")
-            return []
+            raise Exception("Web search tool is not available. Please ensure Tavily API key is set and dependencies are installed.")
         
         try:
             print(f"🌐 Searching web for: {query}")
@@ -326,27 +361,53 @@ class WebSearcher:
             
             web_docs = []
             for result in results:
-                web_doc = {
-                     'content': f"""Web Source: {result.get('url', 'Unknown')}
+                # Handle both string and dict results
+                if isinstance(result, str):
+                    web_doc = {
+                        'content': f"""Web Source: Unknown
+Title: Search Result
+
+Content:
+{result}""",
+                        'url': '',
+                        'title': 'Search Result',
+                        'path': 'Web Search Result',
+                        'source': 'web_search'
+                    }
+                elif isinstance(result, dict):
+                    web_doc = {
+                        'content': f"""Web Source: {result.get('url', 'Unknown')}
 Title: {result.get('title', 'No title')}
 
 Content:
 {result.get('content', 'No content')}""",
-                     'url': result.get('url', ''),
-                     'title': result.get('title', ''),
-                     'path': result.get('url', 'Web Search Result'),  # Add path field for compatibility
-                     'extension': '.md',  # Default to markdown for web content
-                     'relevance_score': 0.8,  # Default high relevance for web results
-                     'source': 'web_search'
-                 }
+                        'url': result.get('url', ''),
+                        'title': result.get('title', ''),
+                        'path': result.get('url', 'Web Search Result'),
+                        'source': 'web_search'
+                    }
+                else:
+                    # Fallback for unexpected result types
+                    web_doc = {
+                        'content': f"""Web Source: Unknown
+Title: Search Result
+
+Content:
+{str(result)}""",
+                        'url': '',
+                        'title': 'Search Result',
+                        'path': 'Web Search Result',
+                        'source': 'web_search'
+                    }
                 web_docs.append(web_doc)
             
             print(f"✅ Found {len(web_docs)} web search results")
             return web_docs
             
         except Exception as e:
-            print(f"❌ Web search error: {e}")
-            return []
+            error_msg = f"❌ Web search error: {e}"
+            print(error_msg)
+            raise Exception(error_msg)
 
 class QueryTransformer:
     """Transform queries for better retrieval"""
@@ -356,10 +417,10 @@ class QueryTransformer:
         if DEPENDENCIES_AVAILABLE and config.groq_api_key:
             self.client = httpx.AsyncClient(timeout=30.0)
     
-    async def transform_query(self, question: str, context: str = "") -> str:
+    async def transform_query(self, question: str, context: str = "") -> Dict[str, Any]:
         """Transform query for better retrieval"""
         if not self.client or not config.groq_api_key:
-            return question  # Fallback to original
+            raise Exception("GROQ_API_KEY is required for query transformation. Please set your API key.")
         
         try:
             prompt = f"""You are a query optimizer that improves questions for better document retrieval.
@@ -404,11 +465,14 @@ Return only the improved question, no explanation."""
                     improved_question = message["content"].strip()
                 return {"transformed_query": improved_question}
             else:
-                return {"transformed_query": question}
+                error_msg = f"❌ Query transformation API error: {response.status_code}"
+                print(error_msg)
+                raise Exception(error_msg)
                 
         except Exception as e:
-            print(f"❌ Query transformation failed: {e}")
-            return {"transformed_query": question}
+            error_msg = f"❌ Query transformation failed: {e}"
+            print(error_msg)
+            raise Exception(error_msg)
 
 class LocalEmbeddingGenerator:
     """Generate embeddings locally for privacy"""
@@ -426,15 +490,15 @@ class LocalEmbeddingGenerator:
     def generate_embedding(self, text: str) -> List[float]:
         """Generate embedding for text"""
         if not self.model:
-            # Return dummy embedding if model not available
-            return [0.0] * 1024
+            raise Exception("Embedding model is not available. Please ensure dependencies are installed.")
         
         try:
             embedding = self.model.encode(text, normalize_embeddings=True)
             return embedding.tolist()
         except Exception as e:
-            print(f"❌ Embedding generation failed: {e}")
-            return [0.0] * 1024
+            error_msg = f"❌ Embedding generation failed: {e}"
+            print(error_msg)
+            raise Exception(error_msg)
 
 class PromptGenAPIClient:
     """Client for connecting to PromptGen API to fetch techniques"""
@@ -447,7 +511,7 @@ class PromptGenAPIClient:
     async def fetch_techniques(self, question: str, limit: int = 3) -> List[Dict[str, Any]]:
         """Fetch techniques from PromptGen API"""
         if not self.client or not config.promptgen_api_key:
-            return self._fallback_techniques()
+            raise Exception("PROMPTGEN_API_KEY is required for fetching techniques. Please set your API key.")
         
         try:
             print(f"🌐 Fetching techniques from PromptGen API for: {question}")
@@ -465,40 +529,20 @@ class PromptGenAPIClient:
             )
             
             if response.status_code == 200:
-                data = response.json()
-                techniques = data.get("techniques", [])
+                techniques = response.json()
                 print(f"✅ Fetched {len(techniques)} techniques from PromptGen API")
                 return techniques
             else:
-                print(f"❌ PromptGen API error: {response.status_code} - {response.text}")
-                return self._fallback_techniques()
+                error_msg = f"❌ PromptGen API error: {response.status_code} - {response.text}"
+                print(error_msg)
+                raise Exception(error_msg)
                 
         except Exception as e:
-            print(f"❌ Failed to fetch techniques from PromptGen API: {e}")
-            return self._fallback_techniques()
+            error_msg = f"❌ Failed to fetch techniques from PromptGen API: {e}"
+            print(error_msg)
+            raise Exception(error_msg)
     
-    def _fallback_techniques(self) -> List[Dict[str, Any]]:
-        """Fallback techniques when API is unavailable"""
-        return [
-            {
-                "name": "Chain of Thought",
-                "description": "Break down complex problems into step-by-step reasoning",
-                "example": "Let me think through this step by step: 1) First... 2) Then... 3) Finally...",
-                "score": 0.9
-            },
-            {
-                "name": "Plan and Solve",
-                "description": "Create a structured plan before implementing the solution",
-                "example": "Plan: Identify the problem, research solutions, implement. Solve: Execute each step systematically.",
-                "score": 0.85
-            },
-            {
-                "name": "Few-Shot Learning",
-                "description": "Provide examples to guide the response",
-                "example": "Here are some examples: Example 1: ... Example 2: ... Now apply this pattern to your case.",
-                "score": 0.8
-            }
-        ]
+
 
 class LLMQuestionAnalyzer:
     """Analyze questions using LLM for intelligent categorization"""
@@ -511,7 +555,7 @@ class LLMQuestionAnalyzer:
     async def analyze_question(self, question: str) -> Dict[str, Any]:
         """Analyze question type and complexity using LLM"""
         if not self.client or not config.groq_api_key:
-            return self._simple_analysis(question)
+            raise Exception("GROQ_API_KEY is required for question analysis. Please set your API key.")
         
         try:
             prompt = f"""Analyze this question and categorize it:
@@ -558,44 +602,39 @@ Pick the most relevant types (1-3), complexity level, domain, and primary intent
                 if content.startswith("```json"):
                     content = content.replace("```json", "").replace("```", "").strip()
                 
-                analysis = json.loads(content)
-                print(f"🧠 LLM Analysis: {analysis}")
-                return analysis
+                # Handle empty content
+                if not content:
+                    print("⚠️ Empty response from API, using fallback")
+                    return {
+                        "types": ["general"],
+                        "complexity": "medium",
+                        "domain": "general",
+                        "intent": "learn"
+                    }
+                
+                try:
+                    analysis = json.loads(content)
+                    print(f"🧠 LLM Analysis: {analysis}")
+                    return analysis
+                except json.JSONDecodeError:
+                    print(f"⚠️ Invalid JSON response: {content[:100]}..., using fallback")
+                    return {
+                        "types": ["general"],
+                        "complexity": "medium",
+                        "domain": "general",
+                        "intent": "learn"
+                    }
             else:
-                print(f"❌ LLM API error: {response.status_code}")
-                return self._simple_analysis(question)
-            
+                error_msg = f"❌ LLM analysis API error: {response.status_code}"
+                print(f"{error_msg}, using fallback")
+                return {"complexity": "medium", "domain": "general", "requires_context": True, "key_concepts": [], "reasoning": f"API error {response.status_code}, using defaults"}
+                
         except Exception as e:
-            print(f"❌ LLM analysis failed: {e}")
-            return self._simple_analysis(question)
+            error_msg = f"❌ LLM analysis failed: {e}"
+            print(f"{error_msg}, using fallback")
+            return {"complexity": "medium", "domain": "general", "requires_context": True, "key_concepts": [], "reasoning": "Analysis failed, using defaults"}
     
-    def _simple_analysis(self, question: str) -> Dict[str, Any]:
-        """Simple keyword-based analysis as fallback"""
-        question_lower = question.lower()
-        
-        types = []
-        if any(word in question_lower for word in ["bug", "error", "fix", "debug", "issue"]):
-            types.append("debugging")
-        if any(word in question_lower for word in ["optimize", "performance", "faster", "slow"]):
-            types.append("optimization")
-        if any(word in question_lower for word in ["architecture", "design", "structure", "pattern"]):
-            types.append("architecture")
-        if any(word in question_lower for word in ["implement", "create", "build", "make"]):
-            types.append("implementation")
-        if any(word in question_lower for word in ["explain", "how", "what", "why"]):
-            types.append("explanation")
-        
-        if not types:
-            types = ["general"]
-        
-        complexity = "high" if len(question.split()) > 15 else "medium" if len(question.split()) > 8 else "low"
-        
-        return {
-            "types": types,
-            "complexity": complexity,
-            "domain": "general",
-            "intent": "solve"
-        }
+
 
 class CodeContextScanner:
     """Scan workspace for relevant code context"""
@@ -616,13 +655,24 @@ class CodeContextScanner:
             if item.is_dir() and not item.name.startswith('.') and not self._should_ignore(item):
                 dir_name_lower = item.name.lower()
                 
-                # Check for exact match or if directory name is mentioned in question
-                if (dir_name_lower in question_lower or 
-                    any(word in dir_name_lower for word in question_lower.split() if len(word) > 3)):
-                    potential_dirs.append((item, dir_name_lower in question_lower))
-                # Check for common abbreviations or variations
-                elif self._check_directory_variations(dir_name_lower, question_lower):
-                    potential_dirs.append((item, False))  # Mark as partial match
+                # Check for exact match
+                exact_match = dir_name_lower in question_lower
+                
+                # Check for partial matches (words from question in directory name)
+                question_words = [word for word in question_lower.split() if len(word) > 3]
+                partial_match = any(word in dir_name_lower for word in question_words)
+                
+                # Check for reverse partial matches (parts of directory name in question)
+                dir_parts = [part for part in dir_name_lower.replace('-', ' ').replace('_', ' ').split() if len(part) > 2]
+                reverse_match = any(part in question_lower for part in dir_parts)
+                
+                # Check for variations and abbreviations
+                variation_match = self._check_directory_variations(dir_name_lower, question_lower)
+                
+                if exact_match:
+                    potential_dirs.append((item, True))  # Exact match
+                elif partial_match or reverse_match or variation_match:
+                    potential_dirs.append((item, False))  # Partial match
         
         # Sort by exact matches first, then partial matches
         potential_dirs.sort(key=lambda x: x[1], reverse=True)
@@ -639,16 +689,31 @@ class CodeContextScanner:
             return project_workspace
     
     def _check_directory_variations(self, dir_name: str, question: str) -> bool:
-        """Check for common directory name variations and abbreviations"""
-        variations = {
-            'cryptocasino': ['crypto', 'casino', 'gambling', 'game'],
-            'promptgenmcp': ['prompt', 'gen', 'mcp', 'generation'],
-            'python-sdk': ['python', 'sdk', 'py'],
-        }
+        """Check for directory name variations using dynamic string matching"""
+        import re
         
-        dir_key = dir_name.replace('-', '').replace('_', '')
-        if dir_key in variations:
-            return any(var in question for var in variations[dir_key])
+        # Split directory name into parts (handle kebab-case, snake_case, camelCase)
+        parts = re.split(r'[-_]|(?<=[a-z])(?=[A-Z])', dir_name.lower())
+        parts = [part for part in parts if len(part) > 2]  # Filter out very short parts
+        
+        question_lower = question.lower()
+        question_words = set(question_lower.split())
+        
+        # Check if any significant part of the directory name appears in the question
+        for part in parts:
+            if part in question_lower:
+                return True
+            
+            # Check for partial matches (substring matching)
+            for word in question_words:
+                if len(word) > 3:  # Only check meaningful words
+                    # Check if directory part contains question word or vice versa
+                    if (part in word and len(part) > 3) or (word in part and len(word) > 3):
+                        return True
+                    
+                    # Check for similar beginnings (first 4+ characters)
+                    if len(part) >= 4 and len(word) >= 4 and part[:4] == word[:4]:
+                        return True
         
         return False
     
@@ -699,8 +764,9 @@ class CodeContextScanner:
             return relevant_files[:5]  # Return top 5 most relevant files
         
         except Exception as e:
-            print(f"❌ Workspace scan failed: {e}")
-            return []
+            error_msg = f"❌ Workspace scan failed: {e}"
+            print(error_msg)
+            raise Exception(error_msg)
         
     def _should_ignore(self, file_path: Path) -> bool:
         """Check if file should be ignored"""
@@ -750,6 +816,7 @@ class PromptEnhancer:
         current_question = question
         filtered_context = code_context
         generation_history = []
+        final_relevant_docs = []
         
         while iteration < self.max_iterations:
             iteration += 1
@@ -778,34 +845,52 @@ class PromptEnhancer:
                     f"{current_question} documentation tutorial guide", max_results=3
                 )
                 if web_docs:
-                    # Grade web document relevance
+                    # Grade web document relevance and deduplicate
+                    existing_paths = {doc.get('path', doc.get('url', '')) for doc in relevant_docs}
+                    new_web_docs_added = 0
                     for doc in web_docs:
-                        grade = await self.retrieval_grader.grade_relevance(
-                            current_question, doc['content']
-                        )
-                        if grade['relevant']:
-                            doc['relevance_grade'] = grade['score']
-                            doc['reasoning'] = grade['reasoning']
-                            relevant_docs.append(doc)
-                    print(f"✅ Added {len([d for d in web_docs if 'relevance_grade' in d])} relevant web documents")
+                        doc_path = doc.get('path', doc.get('url', f"web_doc_{len(relevant_docs)}"))
+                        if doc_path not in existing_paths:
+                            grade = await self.retrieval_grader.grade_relevance(
+                                current_question, doc['content']
+                            )
+                            if grade['relevant']:
+                                doc['relevance_grade'] = grade['score']
+                                doc['reasoning'] = grade['reasoning']
+                                relevant_docs.append(doc)
+                                existing_paths.add(doc_path)
+                                new_web_docs_added += 1
+                    print(f"✅ Added {new_web_docs_added} relevant web documents")
             
-            # Step 2: Generate initial response
-            enhanced_prompt = await self._generate_enhanced_prompt(
-                current_question, analysis, techniques, relevant_docs, iteration
-            )
+            # Store the best relevant docs from this iteration (deduplicate by path)
+            seen_paths = set()
+            unique_relevant_docs = []
+            for doc in relevant_docs:
+                doc_path = doc.get('path', doc.get('url', f"doc_{len(unique_relevant_docs)}"))
+                if doc_path not in seen_paths:
+                    seen_paths.add(doc_path)
+                    unique_relevant_docs.append(doc)
+            final_relevant_docs = unique_relevant_docs
             
-            # Step 3: Check for hallucinations
+            # Step 2: Generate a simplified test prompt to evaluate quality (without full techniques)
+            test_prompt = f"""Question: {current_question}
+            
+Context: {len(relevant_docs)} relevant documents found.
+            
+Analysis: {analysis.get('types', ['general'])} - {analysis.get('complexity', 'medium')} complexity"""
+            
+            # Step 3: Check for hallucinations using test prompt
             print("🔍 Checking for hallucinations...")
             hallucination_check = await self.hallucination_grader.check_grounding(
-                [doc['content'] for doc in relevant_docs], enhanced_prompt
+                [doc['content'] for doc in relevant_docs], test_prompt
             )
             # Convert grounding result to hallucination format
             hallucination_check['has_hallucination'] = not hallucination_check.get('grounded', True)
             
-            # Step 4: Assess answer quality
+            # Step 4: Assess answer quality using test prompt
             print("⭐ Assessing answer quality...")
             quality_check = await self.answer_grader.grade_answer(
-                current_question, enhanced_prompt
+                current_question, test_prompt
             )
             
             generation_history.append({
@@ -814,7 +899,7 @@ class PromptEnhancer:
                 'relevant_docs': len(relevant_docs),
                 'hallucination_score': hallucination_check['score'],
                 'quality_score': quality_check['score'],
-                'prompt_length': len(enhanced_prompt)
+                'prompt_length': len(test_prompt)
             })
             
             # Step 5: Decision logic
@@ -831,15 +916,22 @@ class PromptEnhancer:
                     f"{current_question} best practices examples", max_results=2
                 )
                 if web_docs:
+                    # Deduplicate before adding to filtered_context
+                    existing_paths = {doc.get('path', doc.get('url', '')) for doc in filtered_context}
+                    new_docs_added = 0
                     for doc in web_docs:
-                        grade = await self.retrieval_grader.grade_relevance(
-                            current_question, doc['content']
-                        )
-                        if grade['relevant']:
-                            doc['relevance_grade'] = grade['score']
-                            doc['reasoning'] = grade['reasoning']
-                            filtered_context.append(doc)
-                    print(f"✅ Added {len([d for d in web_docs if 'relevance_grade' in d])} web docs to context")
+                        doc_path = doc.get('path', doc.get('url', f"web_doc_{len(filtered_context)}"))
+                        if doc_path not in existing_paths:
+                            grade = await self.retrieval_grader.grade_relevance(
+                                current_question, doc['content']
+                            )
+                            if grade['relevant']:
+                                doc['relevance_grade'] = grade['score']
+                                doc['reasoning'] = grade['reasoning']
+                                filtered_context.append(doc)
+                                existing_paths.add(doc_path)
+                                new_docs_added += 1
+                    print(f"✅ Added {new_docs_added} new web docs to context")
             
             # Step 7: Transform query if needed
             if iteration < self.max_iterations:
@@ -850,6 +942,12 @@ class PromptEnhancer:
                 )
                 current_question = transformed['transformed_query']
                 print(f"📝 New query: {current_question}")
+        
+        # Generate the final enhanced prompt only once with the best context
+        print("📝 Generating final enhanced prompt...")
+        enhanced_prompt = await self._generate_enhanced_prompt(
+            question, analysis, techniques, final_relevant_docs, iteration
+        )
         
         # Add Self-RAG metadata to final prompt
         final_prompt = self._add_self_rag_metadata(
@@ -866,52 +964,25 @@ class PromptEnhancer:
         relevant_docs: List[Dict[str, Any]],
         iteration: int
     ) -> str:
-        """Generate the actual enhanced prompt using the techniques"""
+        """Generate the actual enhanced prompt using the techniques dynamically"""
         
-        # Extract technique names for application
-        technique_names = [t['name'] for t in techniques]
-        
-        # Build the enhanced prompt by applying the techniques
+        # Build the enhanced prompt by applying the techniques dynamically
         enhanced_prompt = ""
         
-        # Apply Chain of Thought if present
-        if any('Chain of Thought' in name for name in technique_names):
-            enhanced_prompt += """Think step by step to solve this problem. Break down your reasoning into clear, logical steps:
+        # Apply techniques based on their actual content from the API
+        for technique in techniques:
+            technique_name = technique.get('name', '')
+            technique_content = technique.get('content', '')
+            technique_description = technique.get('description', '')
+            
+            if technique_content:
+                enhanced_prompt += f"""**{technique_name}:**
+{technique_content}
 
 """
-        
-        # Apply Plan and Solve if present
-        if any('Plan and Solve' in name for name in technique_names):
-            enhanced_prompt += """First, create a detailed plan to address this question, then execute each step systematically:
-
-**PLAN:**
-1. Analyze the current situation
-2. Identify key requirements and constraints
-3. Develop a solution strategy
-4. Implement the solution
-5. Validate and test the results
-
-**EXECUTION:**
-
-"""
-        
-        # Apply Few-Shot Learning if present
-        if any('Few-Shot' in name for name in technique_names):
-            enhanced_prompt += """Here are some examples of similar problems and their solutions to guide your approach:
-
-**Example 1:** When making a project deployable, key steps include:
-- Setting up proper environment configuration
-- Implementing security best practices
-- Creating deployment scripts
-- Adding monitoring and logging
-
-**Example 2:** For security improvements:
-- Input validation and sanitization
-- Authentication and authorization
-- Secure communication (HTTPS/TLS)
-- Environment variable management
-
-**Now apply this pattern to the current problem:**
+            elif technique_description:
+                enhanced_prompt += f"""**{technique_name}:**
+{technique_description}
 
 """
         
@@ -920,8 +991,9 @@ class PromptEnhancer:
 
 """
         
-        # Add analysis context
-        enhanced_prompt += f"""**Context Analysis:**
+        # Add analysis context if available
+        if analysis:
+            enhanced_prompt += f"""**Context Analysis:**
 - Problem types: {', '.join(analysis.get('types', ['general']))}
 - Complexity level: {analysis.get('complexity', 'medium')}
 - Domain: {analysis.get('domain', 'general')}
@@ -934,26 +1006,27 @@ class PromptEnhancer:
             enhanced_prompt += """**Available Code Context:**
 """
             for i, doc in enumerate(relevant_docs, 1):
-                enhanced_prompt += f"""File {i}: {doc['path']} (Relevance: {doc.get('relevance_grade', doc['relevance_score']):.3f})
-```{doc['extension'][1:] if doc['extension'] else 'text'}
+                relevance = doc.get('relevance_grade', doc.get('relevance_score', 0.5))
+                enhanced_prompt += f"""File {i}: {doc['path']} (Relevance: {relevance:.3f})
+```{doc.get('extension', '.txt')[1:] if doc.get('extension', '.txt').startswith('.') else doc.get('extension', 'txt')}
 {doc['content'][:32000]}{'...' if len(doc['content']) > 32000 else ''}
 ```
 
 """
         
-        # Add specific instructions based on the question type
-        enhanced_prompt += """**Instructions:**
-Provide a comprehensive solution that:
-1. Addresses all aspects of the question
-2. References specific files and code when relevant
-3. Includes concrete implementation steps
-4. Considers security and best practices
-5. Provides clear, actionable recommendations
-
-Be specific, practical, and thorough in your response. If you need to make assumptions, state them clearly.
-"""
-        
         return enhanced_prompt
+    
+    def _format_techniques_for_prompt(self, techniques: List[Dict[str, Any]]) -> str:
+        """Format techniques for inclusion in a prompt."""
+        if not techniques:
+            return "No specific techniques available."
+        
+        formatted = "**Available Techniques:**\n"
+        for i, technique in enumerate(techniques, 1):
+            content = technique.get('content', technique.get('description', 'No description available'))
+            formatted += f"{i}. {content}\n"
+        
+        return formatted
     
     def _add_self_rag_metadata(
         self, 
@@ -979,7 +1052,9 @@ Be specific, practical, and thorough in your response. If you need to make assum
 *This enhanced prompt was generated using Self-RAG with iterative refinement, document grading, hallucination detection, and answer quality assessment.*
 """
         
-        return prompt + metadata
+        final_result = prompt + metadata
+        
+        return final_result
     
     # Keep the original method for backward compatibility
     async def enhance_prompt(
